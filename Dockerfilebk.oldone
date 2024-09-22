@@ -1,0 +1,61 @@
+# Base image
+FROM ubuntu:20.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    lsb-release \
+    apt-transport-https \
+    sudo \
+    vim \
+    apache2 \
+    mariadb-server \
+    libapache2-mod-perl2 \
+    libapache2-mod-fcgid \
+    gnupg \
+    && apt-get clean
+
+# Add the Koha repository and GPG key
+RUN echo 'deb https://debian.koha-community.org/koha 24.05 main' | sudo tee /etc/apt/sources.list.d/koha.list && \
+    wget -O- https://debian.koha-community.org/koha/gpg.asc | apt-key add -
+
+# Update and install Koha
+RUN apt-get update && apt-get install -y koha-common
+
+# Enable Apache modules and restart Apache
+RUN a2enmod rewrite cgi deflate && \
+    service apache2 restart
+
+# Secure MariaDB installation
+RUN service mysql start && \
+    mysql_secure_installation <<EOF
+n
+Y
+Y
+Y
+Y
+EOF
+
+# Start MySQL service before creating the Koha instance
+RUN service mysql start && \
+    koha-create --create-db demo
+
+
+# Configure Apache for IP-based access on custom ports
+RUN sed -i 's/<VirtualHost *:80>/<VirtualHost *:7001>/' /etc/apache2/sites-available/demo.conf && \
+    sed -i 's/<VirtualHost *:80>/<VirtualHost *:7002>/' /etc/apache2/sites-available/demo.conf && \
+    echo "Listen 7001\nListen 7002" >> /etc/apache2/ports.conf
+
+# Enable Koha site and restart Apache
+RUN a2ensite demo && \
+    service apache2 restart
+
+# Expose ports
+EXPOSE 7001 7002
+
+# Start Apache and MariaDB services on container startup
+CMD service mysql start && service apache2 start && tail -f /dev/null
+

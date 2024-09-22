@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  koha:
+    build: .
+    container_name: koha-container2
+    ports:
+      - "80:80"      # Public OPAC interface
+      - "8080:8080"  # Staff interface
+    volumes:
+      - ./koha_data:/var/lib/koha   # Persistent storage for Koha
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - DOMAIN=localhost
+    networks:
+      - koha-network
+    restart: unless-stopped
+
+  db:
+    image: mariadb:latest
+    container_name: mariadb-container
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ./db_data:/var/lib/mysql
+    networks:
+      - koha-network
+    restart: unless-stopped
+
+networks:
+  koha-network:
+    driver: bridge
+
+volumes:
+  koha_data:
+  db_data:
