@@ -8,7 +8,10 @@ services:
       - "80:80"      # Public OPAC interface
       - "8080:8080"  # Staff interface
     volumes:
-      - ./koha_data:/var/lib/koha   # Persistent storage for Koha
+      - ./koha_data:/var/lib/koha          # Persistent storage for Koha
+      - ./apache_sites:/etc/apache2/sites-available # Persistent Apache site configs
+      - ./koha_data/log:/var/log/koha  # Persistent Koha logs
+      - ./koha_data/config:/etc/koha  # Persistent Koha config
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - DOMAIN=localhost
@@ -34,3 +37,4 @@ networks:
 volumes:
   koha_data:
   db_data:
+  apache_sites:  # Added volume for Apache site configurations
