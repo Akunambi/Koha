@@ -8,13 +8,14 @@ services:
       - "80:80"      # Public OPAC interface
       - "8080:8080"  # Staff interface
     volumes:
-      - ./koha_data:/var/lib/koha          # Persistent storage for Koha
-      - ./apache_sites:/etc/apache2/sites-available # Persistent Apache site configs
-      - ./koha_data/log:/var/log/koha  # Persistent Koha logs
-      - ./koha_data/config:/etc/koha  # Persistent Koha config
+      - ./libraryname.conf:/etc/apache2/sites-available/libraryname.conf
+    #   - ./koha_data:/var/lib/koha          # Persistent storage for Koha
+    #   - ./apache_sites:/etc/apache2/sites-available # Persistent Apache site configs
+    #   - ./koha_data/log:/var/log/koha  # Persistent Koha logs
+    #   - ./koha_data/config:/etc/koha  # Persistent Koha config
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - DOMAIN=localhost
+      - LIBRARY_NAME=${LIBRARY_NAME}       # Load from .env
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     networks:
       - koha-network
     restart: unless-stopped
@@ -23,7 +24,7 @@ services:
     image: mariadb:latest
     container_name: mariadb-container
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - ./db_data:/var/lib/mysql
     networks:

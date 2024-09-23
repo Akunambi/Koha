@@ -1,7 +1,7 @@
-FROM debian:bullseye-slim
+FROM ubuntu:22.04
 
 # Set environment variables
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
 RUN apt-get update && \
@@ -22,15 +22,18 @@ RUN apt-get update && \
 RUN a2enmod rewrite cgi headers proxy_http
 
 # Configure MariaDB
-RUN service mariadb start \
-    && mysql -e "CREATE USER 'koha'@'localhost' IDENTIFIED BY 'password';" \
-    && mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'koha'@'localhost';" \
-    && mysql -e "FLUSH PRIVILEGES;" \
-    && koha-create --create-db libraryname
+RUN service mariadb start && \
+    mysql -e "CREATE USER 'koha'@'localhost' IDENTIFIED BY 'password';" && \
+    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'koha'@'localhost';" && \
+    mysql -e "FLUSH PRIVILEGES;" && \
+    koha-create --create-db libraryname
 
 # Start Koha and Plack
-RUN koha-plack --enable libraryname \
-    && koha-plack --start libraryname
+RUN koha-plack --enable libraryname && \
+    koha-plack --start libraryname
+
+# Restart Apache
+RUN service apache2 restart
 
 # Expose the necessary ports for OPAC and staff interface
 EXPOSE 80 8080
